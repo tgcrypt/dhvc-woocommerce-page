@@ -1,19 +1,42 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-if(!function_exists('vc_add_shortcode_param') && defined( 'WPB_VC_VERSION' ) ){
-	function vc_add_shortcode_param( $name, $form_field_callback, $script_url = null ) {
-		return WpbakeryShortcodeParams::addField( $name, $form_field_callback, $script_url );
-	}
-}
 
 class DHVC_Woo_Page_VisualComposer{
 	public function __construct(){
-		$this->_map();
+		add_action( 'vc_before_init', array(&$this,'init') );
 		
+		add_action( 'vc_after_set_mode', array(&$this,'disableinline') );
+		
+		add_action( 'vc_after_init', array(&$this,'editor_init') );
+		add_action( 'vc_after_set_mode', array(&$this,'map'));
 	}
 	
-	public function _map(){
+	public function init(){
+		require_once DHVC_WOO_PAGE_DIR.'/includes/vc-functions.php';
+	}
+	
+	public function disableinline(){
+		if(dhvc_woo_product_page_is_page_editable())
+			vc_frontend_editor()->disableInline();
+	}
+	
+	public function editor_init(){
+		require_once DHVC_WOO_PAGE_DIR.'/includes/vc-backend-editor.php';
+		$backend_editor = new DHVC_Woo_Page_Vc_Backend_Editor();
+		$backend_editor->addHooksSettings();
+		if(dhvc_woo_product_page_is_page_editable()){
+			require_once DHVC_WOO_PAGE_DIR.'/includes/vc-frontend-editor.php';
+			$dhvc_woo_page_vc_frontend_editor = new DHVC_Woo_Page_Vc_Frontend_Editor();
+			$dhvc_woo_page_vc_frontend_editor->init();
+		}
+	}
+	
+	public function map(){
+		$params_script = DHVC_WOO_PAGE_URL.'/assets/js/params.js';
+		vc_add_shortcode_param ( 'dhvc_woo_product_page_field_categories', 'dhvc_woo_product_page_setting_field_categories',$params_script);
+		vc_add_shortcode_param ( 'dhvc_woo_product_page_field_products_ajax', 'dhvc_woo_product_page_setting_field_products_ajax',$params_script);
+			
 		vc_map ( array (
 			"name" => __ ( "WC Single Product Images", DHVC_WOO_PAGE ),
 			"base" => "dhvc_woo_product_page_images",
@@ -27,7 +50,13 @@ class DHVC_Woo_Page_VisualComposer{
 					'save_always'=>true,
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -44,7 +73,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -61,7 +96,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -78,7 +119,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		vc_map ( array (
@@ -94,7 +141,13 @@ class DHVC_Woo_Page_VisualComposer{
 					'save_always'=>true,
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -110,7 +163,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"heading" => __ ( "Extra class name", DHVC_WOO_PAGE ),
 					"param_name" => "el_class",
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		vc_map ( array (
@@ -126,7 +185,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -143,7 +208,13 @@ class DHVC_Woo_Page_VisualComposer{
 					'save_always'=>true,
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -160,7 +231,13 @@ class DHVC_Woo_Page_VisualComposer{
 					'save_always'=>true,
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -177,7 +254,13 @@ class DHVC_Woo_Page_VisualComposer{
 					'save_always'=>true,
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -194,7 +277,13 @@ class DHVC_Woo_Page_VisualComposer{
 					'save_always'=>true,
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -211,7 +300,13 @@ class DHVC_Woo_Page_VisualComposer{
 					'save_always'=>true,
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -259,7 +354,13 @@ class DHVC_Woo_Page_VisualComposer{
 					'save_always'=>true,
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		vc_map ( array (
@@ -306,7 +407,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		vc_map ( array (
@@ -339,6 +446,12 @@ class DHVC_Woo_Page_VisualComposer{
 					'save_always'=>true,
 					'description' => __( 'Style particular content element differently - add a class name and refer to it in custom CSS.', DHVC_WOO_PAGE ),
 				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		if(function_exists('fpd_get_option')){
@@ -354,7 +467,13 @@ class DHVC_Woo_Page_VisualComposer{
 						"param_name" => "el_class",
 						'value'=>'',
 						"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-					)
+					),
+					array(
+						'type' => 'css_editor',
+						'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+						'param_name' => 'css',
+						'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+					),
 				)
 			) );
 		}
@@ -410,7 +529,13 @@ class DHVC_Woo_Page_VisualComposer{
 							'save_always'=>true,
 							'value'=>'',
 							"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-						)
+						),
+						array(
+							'type' => 'css_editor',
+							'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+							'param_name' => 'css',
+							'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+						),
 					)
 				) );
 			}
@@ -430,7 +555,13 @@ class DHVC_Woo_Page_VisualComposer{
 						"param_name" => "el_class",
 						'value'=>'',
 						"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-					)
+					),
+					array(
+						'type' => 'css_editor',
+						'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+						'param_name' => 'css',
+						'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+					),
 				)
 			) );
 		}
@@ -448,7 +579,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -465,7 +602,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -482,7 +625,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -499,7 +648,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -516,7 +671,13 @@ class DHVC_Woo_Page_VisualComposer{
 					'save_always'=>true,
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -596,7 +757,13 @@ class DHVC_Woo_Page_VisualComposer{
 					'save_always'=>true,
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -679,7 +846,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -738,7 +911,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -796,7 +975,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -855,7 +1040,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -886,7 +1077,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -945,7 +1142,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -1004,7 +1207,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -1021,7 +1230,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 		
@@ -1092,7 +1307,13 @@ class DHVC_Woo_Page_VisualComposer{
 					"param_name" => "el_class",
 					'value'=>'',
 					"description" => __ ( "If you wish to style particular content element differently, then use this field to add a class name and then refer to it in your css file.", DHVC_WOO_PAGE )
-				)
+				),
+				array(
+					'type' => 'css_editor',
+					'heading' => __( 'CSS box', DHVC_WOO_PAGE ),
+					'param_name' => 'css',
+					'group' => __( 'Design Options', DHVC_WOO_PAGE ),
+				),
 			)
 		) );
 	}

@@ -3,50 +3,17 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class DHVC_Woo_Page_Shortcode {
 	protected $_loaded = false;
-	protected $shortcodes;
 	public function __construct() {
-		$this->shortcodes = array(
-			'dhvc_woo_product_page_images'								=>'dhvc_woo_product_page_images_shortcode',
-			'dhvc_woo_product_page_title'								=>'dhvc_woo_product_page_title_shortcode',
-			'dhvc_woo_product_page_rating'								=>'dhvc_woo_product_page_rating_shortcode',
-			'dhvc_woo_product_page_price'								=>'dhvc_woo_product_page_price_shortcode',
-			'dhvc_woo_product_page_excerpt'								=>'dhvc_woo_product_page_excerpt_shortcode',
-			'dhvc_woo_product_page_description'							=>'dhvc_woo_product_page_description_shortcode',
-			'dhvc_woo_product_page_additional_information'				=>'dhvc_woo_product_page_additional_information',
-			'dhvc_woo_product_page_add_to_cart'							=>'dhvc_woo_product_page_add_to_cart_shortcode',
-			'dhvc_woo_product_page_meta'								=>'dhvc_woo_product_page_meta_shortcode',
-			'dhvc_woo_product_page_sharing'								=>'dhvc_woo_product_page_sharing_shortcode',
-			'dhvc_woo_product_page_data_tabs'							=>'dhvc_woo_product_page_data_tabs_shortcode',
-			'dhvc_woo_product_page_reviews'								=>'dhvc_woo_product_page_reviews_shortcode',
-			'dhvc_woo_product_page_upsell_products'						=>'dhvc_woo_product_page_upsell_products_shortcode',
-			'dhvc_woo_product_page_related_products'					=>'dhvc_woo_product_page_related_products_shortcode',
-			'dhvc_woo_product_page_wishlist'							=>'dhvc_woo_product_page_wishlist_shortcode',
-			'dhvc_woo_product_page_custom_field'						=> 'dhvc_woo_product_page_custom_field_shortcode',
-			'dhvc_woo_product_page_product_category'           			=> 'product_category',
-			'dhvc_woo_product_page_product_categories'        			=> 'product_categories',
-			'dhvc_woo_product_page_products'                   			=> 'products',
-			'dhvc_woo_product_page_recent_products'            			=> 'recent_products',
-			'dhvc_woo_product_page_sale_products'              			=> 'sale_products',
-			'dhvc_woo_product_page_best_selling_products'      			=> 'best_selling_products',
-			'dhvc_woo_product_page_top_rated_products'         			=> 'top_rated_products',
-			'dhvc_woo_product_page_featured_products'          			=> 'featured_products',
-			'dhvc_woo_product_page_product_attribute'          			=> 'product_attribute',
-			'dhvc_woo_product_page_shop_messages'              			=> 'shop_messages',
-			'dhvc_woo_product_page_order_tracking' 						=> 'order_tracking',
-			'dhvc_woo_product_page_cart'           						=> 'cart',
-			'dhvc_woo_product_page_checkout'      						=> 'checkout',
-			'dhvc_woo_product_page_my_account'     						=> 'my_account',
-			'dhvc_woo_product_page_breadcrumb'							=> 'breadcrumb',
-		);
-		
+		$this->hook_add_shortcodes();
 	}
 	
-	
-	public function add_shortcodes(){
+	public function hook_add_shortcodes(){
 		add_action('dhvc_woo_product_page_shortcode_placeholder_render', array(&$this,'add_shortcode'));
 		if($this->_loaded)
 			return;
 		add_action('cornerstone_shortcodes_loaded', array(&$this,'add_shortcode'));
+		
+		add_action('vc_load_shortcode', array(&$this,'add_shortcode'));
 		
 		if(apply_filters('dhvc_woocommerce_page_use_hook_before_override',false))
 			add_action( 'dhvc_woocommerce_page_before_override', array( &$this, 'add_shortcode' ));
@@ -57,16 +24,15 @@ class DHVC_Woo_Page_Shortcode {
 	
 	public function add_shortcode(){
 		global $post;
-		foreach ( $this->shortcodes as $shortcode => $function ) {
-			if(strstr($function,'dhvc_woo_product_page_')){
-				if('product'==get_post_type($post)){
-					add_shortcode($shortcode , array(&$this,$function));
-				}else{
-					add_shortcode($shortcode , array(&$this,'shortcode_error2'));
-				}
-			}else{
+		foreach ( dhvc_woo_product_page_single_shortcodes() as $shortcode => $function ) {
+			if('product'===get_post_type($post)){
 				add_shortcode($shortcode , array(&$this,$function));
+			}else{
+				add_shortcode($shortcode , array(&$this,'shortcode_error2'));
 			}
+		}
+		foreach ( dhvc_woo_product_page_wc_shortcodes() as $shortcode => $function ) {
+			add_shortcode($shortcode , array(&$this,$function));
 		}
 		if (class_exists ( 'acf' )) {
 			add_shortcode ( 'dhvc_woo_product_page_acf_field', array(&$this,'dhvc_woo_product_page_acf_field_shortcode') );
@@ -80,6 +46,7 @@ class DHVC_Woo_Page_Shortcode {
 		}
 	}
 	
+	
 	public function shortcode_error($atts='',$content='',$tag=''){
 		 return '<em style="color:red;display:block">Use shortcode "'.$tag.'" is wrong (Please view Product after assigning Custom Template), to use plugin please see <a target="_blank" href="https://www.youtube.com/watch?v=DhqOQdR7K_8">Video</a><br><br></em>';
 	}
@@ -89,7 +56,7 @@ class DHVC_Woo_Page_Shortcode {
 	}
 	
 	public function dhvc_woo_product_page_fpd($atts){
-		extract ( shortcode_atts ( array (
+		extract ( $this->_shortcode_atts ( array (
 			'el_class' => ''
 		), $atts ) );
 		ob_start ();
@@ -125,16 +92,19 @@ class DHVC_Woo_Page_Shortcode {
 		return ob_get_clean ();
 	}
 	
-	public function get_shortcodes_function_call($shortcode){
-		if($this->shortcodes[$shortcode])
-			return $this->shortcodes[$shortcode];
-		return false;
-	}
-	
 	protected function _shortcode_atts($defaults=array(),$atts){
 		if(isset($atts['class']))
 			$atts['el_class'] = $atts['class'];
+		$atts['css'] = isset($atts['css']) ? $atts['css'] : '';
+		$atts['el_class'] = isset($atts['el_class']) ? esc_attr($atts['el_class']).$this->_get_vc_shortcode_custom_css_class($atts['css']) 
+			: $this->_get_vc_shortcode_custom_css_class($atts['css']);
 		return shortcode_atts ( $defaults, $atts );
+	}
+	
+	protected function _get_vc_shortcode_custom_css_class($param_value, $prefix = ' ' ){
+		if(function_exists('vc_shortcode_custom_css_class'))
+			return vc_shortcode_custom_css_class($param_value, $prefix);
+		return ' ';
 	}
 	
 	public function dhvc_woo_product_page_acf_field_shortcode($atts, $content = null) {
@@ -298,15 +268,29 @@ class DHVC_Woo_Page_Shortcode {
 	}
 	
 	public function dhvc_woo_product_page_description_shortcode($atts, $content = null){
+		global $post;
 		extract ( $this->_shortcode_atts ( array (
 			'el_class' => ''
 		), $atts ) );
 		ob_start ();
 		if (! empty ( $el_class ))
 			echo '<div class="' . $el_class . '">';
-		
-		the_content();
-		
+		if(defined('DHVC_WOO_PRODUCT_PAGE_IS_FRONTEND_EDITOR')){
+			$content = $post->post_content;
+			
+			/**
+			 * Filters the post content.
+			 *
+			 * @since 0.71
+			 *
+			 * @param string $content Content of the current post.
+			*/
+			$content = apply_filters( 'the_content', $content );
+			$content = str_replace( ']]>', ']]&gt;', $content );
+			echo $content;
+		}else{
+			the_content();
+		}
 		if (! empty ( $el_class ))
 			echo '</div>';
 		return ob_get_clean ();
@@ -681,3 +665,4 @@ class DHVC_Woo_Page_Shortcode {
 		return $output;
 	}
 }
+new DHVC_Woo_Page_Shortcode;

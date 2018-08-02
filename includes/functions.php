@@ -6,27 +6,146 @@ function dhvc_woo_product_page_is_jupiter_theme(){
 	return $result;
 }
 
-function dhvc_woo_product_page_shortcode_placeholder($content){
+
+function dhvc_woo_product_page_get_preview_editor_url( $template_id = '',$url = '', $id = '' ) {
+	if(!defined( 'WPB_VC_VERSION' ) )
+		return '';
+	$the_ID = ( strlen( $id ) > 0 ? $id : get_the_ID() );
+	return apply_filters( 'dhvc_woo_product_page_get_preview_editor_url', admin_url() .
+		'edit.php?dhvc_woo_product_page_editor=frontend&post_id=' .
+		$the_ID . '&post_type=' . get_post_type( $the_ID ) .
+		(strlen($template_id) > 0 ? '&template_id='.$template_id:'').
+		( strlen( $url ) > 0 ? '&url=' . rawurlencode( $url ) : '' ) );
+}
+
+
+function dhvc_woo_product_page_wc_shortcodes(){
+	return array(
+			'dhvc_woo_product_page_product_category'           			=> 'product_category',
+			'dhvc_woo_product_page_product_categories'        			=> 'product_categories',
+			'dhvc_woo_product_page_products'                   			=> 'products',
+			'dhvc_woo_product_page_recent_products'            			=> 'recent_products',
+			'dhvc_woo_product_page_sale_products'              			=> 'sale_products',
+			'dhvc_woo_product_page_best_selling_products'      			=> 'best_selling_products',
+			'dhvc_woo_product_page_top_rated_products'         			=> 'top_rated_products',
+			'dhvc_woo_product_page_featured_products'          			=> 'featured_products',
+			'dhvc_woo_product_page_product_attribute'          			=> 'product_attribute',
+			'dhvc_woo_product_page_shop_messages'              			=> 'shop_messages',
+			'dhvc_woo_product_page_order_tracking' 						=> 'order_tracking',
+			'dhvc_woo_product_page_cart'           						=> 'cart',
+			'dhvc_woo_product_page_checkout'      						=> 'checkout',
+			'dhvc_woo_product_page_my_account'     						=> 'my_account',
+			'dhvc_woo_product_page_breadcrumb'							=> 'breadcrumb'
+	);
+}
+
+function dhvc_woo_product_page_single_shortcodes(){
+	return array(
+			'dhvc_woo_product_page_images'								=>'dhvc_woo_product_page_images_shortcode',
+			'dhvc_woo_product_page_title'								=>'dhvc_woo_product_page_title_shortcode',
+			'dhvc_woo_product_page_rating'								=>'dhvc_woo_product_page_rating_shortcode',
+			'dhvc_woo_product_page_price'								=>'dhvc_woo_product_page_price_shortcode',
+			'dhvc_woo_product_page_excerpt'								=>'dhvc_woo_product_page_excerpt_shortcode',
+			'dhvc_woo_product_page_description'							=>'dhvc_woo_product_page_description_shortcode',
+			'dhvc_woo_product_page_additional_information'				=>'dhvc_woo_product_page_additional_information',
+			'dhvc_woo_product_page_add_to_cart'							=>'dhvc_woo_product_page_add_to_cart_shortcode',
+			'dhvc_woo_product_page_meta'								=>'dhvc_woo_product_page_meta_shortcode',
+			'dhvc_woo_product_page_sharing'								=>'dhvc_woo_product_page_sharing_shortcode',
+			'dhvc_woo_product_page_data_tabs'							=>'dhvc_woo_product_page_data_tabs_shortcode',
+			'dhvc_woo_product_page_reviews'								=>'dhvc_woo_product_page_reviews_shortcode',
+			'dhvc_woo_product_page_upsell_products'						=>'dhvc_woo_product_page_upsell_products_shortcode',
+			'dhvc_woo_product_page_related_products'					=>'dhvc_woo_product_page_related_products_shortcode',
+			'dhvc_woo_product_page_wishlist'							=>'dhvc_woo_product_page_wishlist_shortcode',
+			'dhvc_woo_product_page_custom_field'						=>'dhvc_woo_product_page_custom_field_shortcode',
+		);
+}
+
+function dhvc_woo_product_page_find_product_by_template($template_id){
+	$product_id = 0;
 	$args = array(
 		'posts_per_page'      => 1,
 		'post_type'           => 'product',
 		'post_status'         => 'publish',
-		'ignore_sticky_posts' => 1,
-		'no_found_rows'       => 1
+		'meta_query' => array(
+			array(
+				'key' => 'dhvc_woo_page_product',
+				'value' => $template_id
+			)
+		)
 	);
-	$dhvc_woo_product_page_shortcode_placeholder_id = apply_filters('dhvc_woo_product_page_shortcode_placeholder_id',0);
-	if ( !empty($dhvc_woo_product_page_shortcode_placeholder_id) ) {
-		$args['p'] = absint( $dhvc_woo_product_page_shortcode_placeholder_id );
-	}
-	$single_product = new WP_Query( $args );
-	if($single_product->have_posts()){
-		while ($single_product->have_posts()){
-			$single_product->the_post();
-			do_action('dhvc_woo_product_page_shortcode_placeholder_render');
+	$products = get_posts($args);
+	if(!empty($products)){
+		foreach ($products as $product){
+			$product_id = $product->ID;
+		}
+	}else{
+		$term_args = array(
+			'taxonomy'   => 'product_cat',
+			'hide_empty' => true,
+			'meta_query' => array(
+				array(
+					'key'       => 'dhvc_woo_page_cat_product',
+					'value'     => $template_id
+				)
+			)
+		);
+		$terms = get_terms($term_args);
+		if(!empty($terms)){
+			$term = $terms[0];
+			$args = array(
+				'posts_per_page'      => 1,
+				'post_type'           => 'product',
+				'post_status'         => 'publish',
+				'tax_query' => array(
+					array(
+						'taxonomy'   => 'product_cat',
+						'field'    => 'id',
+						'terms'    => $term->term_id
+					)
+				)
+			);
+			$products = get_posts($args);
+			foreach ($products as $product){
+				$product_id = $product->ID;
+			}
 		}
 	}
-	wp_reset_postdata();
-	return $content;
+	$product_id = apply_filters('dhvc_woo_product_page_find_product_by_template', $product_id, $template_id);
+	return (int) $product_id;
+}
+
+function dhvc_woo_product_page_get_custom_template($post,$need_term=false){
+	if(empty($post))
+		return 0;
+	
+	$selected_default_template = get_option('dhvc_woo_page_template_default','');
+	$product_template_id = apply_filters('dhvc_woocommerce_page_default_template_id', $selected_default_template);
+// 	if(!empty($selected_default_template))
+// 		$product_template_id = $selected_default_template;
+
+	$product_term = '';
+	if($dhvc_woo_page_product = get_post_meta($post->ID,'dhvc_woo_page_product',true)):
+		$product_template_id = $dhvc_woo_page_product;
+	else:
+		$terms = wp_get_post_terms( $post->ID, 'product_cat' );
+		foreach ( $terms as $term ):
+			if($dhvc_woo_page_cat_product = get_woocommerce_term_meta($term->term_id,'dhvc_woo_page_cat_product',true)):
+				$product_term=$term->name;
+				$product_template_id = $dhvc_woo_page_cat_product;
+				break;
+			endif;
+		endforeach;
+	endif;
+	$product_template_id = apply_filters('dhvc_woocommerce_page_template_id', $product_template_id);
+	$post_type =  get_option('dhvc_woo_page_template_type','dhwc_template');
+	if($post_type!=get_post_type($product_template_id)){
+		$product_template_id = $selected_default_template;
+		$product_term=0;
+	}
+	
+	if($need_term)
+		return array((int)$product_template_id,$product_term);
+	return (int) $product_template_id;
 }
 
 function the_product_page_content(){
@@ -50,8 +169,7 @@ function the_product_page_content(){
 }
 
 function dhvc_woo_product_page_dropdown_custom($args=''){
-	//$post_type =  apply_filters('dhvc_woocommerce_post_type_template', 'page');
-	$post_type = apply_filters('dhvc_woocommerce_page_template_type', 'page');
+	$post_type =  get_option('dhvc_woo_page_template_type','dhwc_template');
 	if('page' != $post_type && post_type_exists($post_type)){
 		$defaults = array(
 			'depth' => 0,
@@ -140,13 +258,23 @@ function dhvc_woo_product_page_setting_field_products_ajax($settings, $value){
 	if(!empty($product_ids)){
 		foreach ( $product_ids as $product_id ) {
 			$product = get_product( $product_id );
-			$output .= '<option value="' . esc_attr( $product_id ) . '" selected="selected">' . wp_kses_post( dhvc_woo_get_product_formatted_name($product) ) . '</option>';
+			$output .= '<option value="' . esc_attr( $product_id ) . '" selected="selected">' . dhvc_woo_product_page_formatted_name($product) . '</option>';
 
 		}
 	}
 	$output .= '</select>';
 	$output .='<input id= "'.$settings['param_name'].'" type="hidden" class="wpb_vc_param_value wpb-textinput" name="'.$settings['param_name'].'" value="'.$value.'" />';
 	return $output;
+}
+
+function dhvc_woo_product_page_formatted_name(WC_Product $product){
+	if ( $product->get_sku() ) {
+		$identifier = $product->get_sku() ;
+	} else {
+		$identifier = '#' . $product->get_id();
+	}
+
+	return sprintf( __( '%s &ndash; %s', DHVC_WOO_PAGE ), $identifier, $product->get_title() );
 }
 
 function dhvc_woo_product_page_search_products (){
@@ -227,7 +355,7 @@ function dhvc_woo_product_page_search_products (){
 
 		$product = get_product( $post );
 
-		$found_products[ $post ] = dhvc_woo_get_product_formatted_name($product);
+		$found_products[ $post ] = dhvc_woo_product_page_formatted_name($product);
 
 	}
 

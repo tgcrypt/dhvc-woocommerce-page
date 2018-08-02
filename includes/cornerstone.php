@@ -12,6 +12,37 @@ function dhvc_select2cs($options){
 	return $choices;
 }
 
+function dhvc_woo_product_page_cornerstone_allowed_post_types($allowed_types){
+	$allowed_types[] = 'dhwc_template';
+	return $allowed_types;
+}
+add_filter('cornerstone_allowed_post_types', 'dhvc_woo_product_page_cornerstone_allowed_post_types');
+
+
+function dhvc_woo_product_page_shortcode_placeholder($content){
+	$args = array(
+		'posts_per_page'      => 1,
+		'post_type'           => 'product',
+		'post_status'         => 'publish',
+		'ignore_sticky_posts' => 1,
+		'no_found_rows'       => 1
+	);
+	$dhvc_woo_product_page_shortcode_placeholder_id = apply_filters('dhvc_woo_product_page_shortcode_placeholder_id',0);
+	if ( !empty($dhvc_woo_product_page_shortcode_placeholder_id) ) {
+		$args['p'] = absint( $dhvc_woo_product_page_shortcode_placeholder_id );
+	}
+	$single_product = new WP_Query( $args );
+	if($single_product->have_posts()){
+		while ($single_product->have_posts()){
+			$single_product->the_post();
+			do_action('dhvc_woo_product_page_shortcode_placeholder_render');
+		}
+	}
+	wp_reset_postdata();
+	return $content;
+}
+
+
 
 class DHVC_Woo_Page_Cornerstone_Element_Base extends Cornerstone_Element_Base{
 	
@@ -52,11 +83,9 @@ class DHVC_Woo_Page_Cornerstone{
 	
 	public function __construct(){
 		add_action('cornerstone_register_elements', array(&$this,'register_elements'),20);
-		add_action('dhvc_cs_render_element', array($this,'add_post_class'));
-		//add_filter( 'cornerstone_icon_map',array($this,'icon_map') );
-		add_action('cornerstone_load_preview', array($this,'load_preview'));
+		add_action('dhvc_cs_render_element', array(&$this,'add_post_class'));
+		add_action('cornerstone_load_preview', array(&$this,'load_preview'));
 		add_action('cornerstone_generated_preview_css', array(&$this,'cornerstone_generated_preview_css'));
-		//add_filter('the_content', array($this,'render_the_content'),99999999);
 	}
 	public function cornerstone_generated_preview_css(){
 		echo '.cs-preview-element-wrapper{
